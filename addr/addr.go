@@ -1,3 +1,4 @@
+// Modified from https://github.com/micro/go-micro/blob/master/util/addr/addr.go
 package addr
 
 import (
