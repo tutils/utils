@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const Float64SafeBits = 53
+
 const encodeBase32Map = "ybndrfg8ejkmcpqxot1uwisza345h769"
 
 var decodeBase32Map [256]byte
@@ -105,13 +107,13 @@ func (gen *IDGen) Generate() ID {
 	gen.mu.Lock()
 	defer gen.mu.Unlock()
 
-	now := time.Since(gen.epoch).Nanoseconds() / 1000000 // milliseconds
+	now := time.Since(gen.epoch).Nanoseconds() / 1e6 // milliseconds
 	if now == gen.time {
 		gen.step = (gen.step + 1) & gen.stepMask
 
 		if gen.step == 0 {
 			for now <= gen.time {
-				now = time.Since(gen.epoch).Nanoseconds() / 1000000
+				now = time.Since(gen.epoch).Nanoseconds() / 1e6
 			}
 		}
 	} else {
@@ -119,16 +121,34 @@ func (gen *IDGen) Generate() ID {
 	}
 	gen.time = now
 
-	r := ID((now)<<gen.timeShift |
-		(gen.node << gen.nodeShift) |
-		(gen.step),
-	)
+	r := ID((now << gen.timeShift) | (gen.node << gen.nodeShift) | gen.step)
 	return r
 }
 
+// GenerateRange creates and returns a range of snowflake IDs by time
+func (gen *IDGen) GenerateRange(t time.Time) (min ID, max ID) {
+	base := (t.UnixNano()/1e6 - Epoch) << gen.timeShift
+	min = ID(base)
+	max = ID(base | gen.nodeMask | gen.stepMask)
+	return min, max
+}
+
+// GenerateRangeInNode creates and returns a range of snowflake IDs in current node by time
+func (gen *IDGen) GenerateRangeInNode(t time.Time) (min ID, max ID) {
+	base := (t.UnixNano()/1e6 - Epoch) << gen.timeShift
+	min = ID(base)
+	max = ID(base | (gen.node << gen.nodeShift) | gen.stepMask)
+	return min, max
+}
+
 // Time returns an int64 unix timestamp in milliseconds of the snowflake ID time
-func (gen *IDGen) Time(id ID) int64 {
+func (gen *IDGen) TimeMS(id ID) int64 {
 	return (int64(id) >> gen.timeShift) + Epoch
+}
+
+// Time returns an int64 unix time of the snowflake ID time
+func (gen *IDGen) Time(id ID) time.Time {
+	return time.Unix(0, gen.TimeMS(id)*1e6)
 }
 
 // Node returns an int64 of the snowflake ID node number
@@ -139,6 +159,11 @@ func (gen *IDGen) Node(id ID) int64 {
 // Step returns an int64 of the snowflake step (or sequence) number
 func (gen *IDGen) Step(id ID) int64 {
 	return int64(id) & gen.stepMask
+}
+
+// MaxSafeTime returns the last safe time for creating snowflake ID
+func (gen *IDGen) MaxSafeTime(usedBits uint8) time.Time {
+	return time.Unix(0, ((-1^(-1<<(usedBits-gen.timeShift)))+Epoch)*1e6)
 }
 
 // Int64 returns an int64 of the snowflake ID
