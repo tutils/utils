@@ -15,9 +15,11 @@ import (
 const Float64SafeBits = 53
 
 const encodeBase32Map = "ybndrfg8ejkmcpqxot1uwisza345h769"
+
 var decodeBase32Map [0xff]byte
 
 const encodeBase58Map = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
+
 var decodeBase58Map [0xff]byte
 
 // A JSONSyntaxError is returned from UnmarshalJSON if an invalid ID is provided.

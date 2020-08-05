@@ -177,8 +177,8 @@ func IPs() []string {
 }
 
 // RealAddress returns a real address
-func RealAddress(addr string) (string, error) {
-	host, port, err := net.SplitHostPort(addr)
+func RealAddress(addr net.Addr) (string, error) {
+	host, port, err := net.SplitHostPort(addr.String())
 	if err != nil {
 		return "", err
 	}

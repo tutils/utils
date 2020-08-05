@@ -22,7 +22,7 @@ func TestIDGen_Generate(t *testing.T) {
 	}
 	for i := 0; i < maxNumber; i++ {
 		if !float64Safe(idList[i]) {
-			t.Fatal("Unsafe for IEEE-754 64-bit floating-point numbers")
+			t.Fatal("unsafe for IEEE-754 64-bit floating-point numbers")
 		}
 	}
 }
@@ -41,7 +41,7 @@ func TestIDGen_MaxSafeTime(t *testing.T) {
 	idMin, idMax = gen.GenerateRangeInNode(last)
 	for id := idMin; id <= idMax; id++ {
 		if !float64Safe(id) {
-			t.Fatal("Excepted safe result")
+			t.Fatal("excepted safe result")
 		}
 	}
 
@@ -52,5 +52,5 @@ func TestIDGen_MaxSafeTime(t *testing.T) {
 			return
 		}
 	}
-	t.Fatal("Excepted Unsafe result")
+	t.Fatal("excepted Unsafe result")
 }
